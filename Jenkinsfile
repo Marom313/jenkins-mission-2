@@ -5,7 +5,7 @@ pipeline {
         choice(
             name: 'SERVICE',
             choices: ['service1', 'service2'],
-            description: 'Which service to deploy'
+            description: 'Which service to build'
         )
         string(
             name: 'HOST_PORT',
@@ -31,20 +31,22 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 sh '''
-                  docker build -t ${IMAGE_NAME} ${SERVICE}
+                docker build -t ${IMAGE_NAME} .
                 '''
             }
         }
 
         stage('Docker Login') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-creds',
-                    usernameVariable: 'DH_USER',
-                    passwordVariable: 'DH_PASS'
-                )]) {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-creds',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )
+                ]) {
                     sh '''
-                      echo "$DH_PASS" | docker login -u "$DH_USER" --password-stdin
+                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
                     '''
                 }
             }
@@ -53,18 +55,10 @@ pipeline {
         stage('Push Image') {
             steps {
                 sh '''
-                  docker push ${IMAGE_NAME}
-                '''
-            }
-        }
-
-        stage('Deploy with Ansible') {
-            steps {
-                sh '''
-                  ansible-playbook -i inventory.ini deploy-playbook.yml \
-                    --extra-vars "service=${SERVICE} image=${IMAGE_NAME} host_port=${HOST_PORT}"
+                docker push ${IMAGE_NAME}
                 '''
             }
         }
     }
 }
+
