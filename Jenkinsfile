@@ -28,11 +28,15 @@ pipeline {
             }
         }
 
-        stage('Docker Login') {
-            steps {
-                withCredentials([
-                    string(credentialsId: 'dockerhub-creds', variable: 'DOCKERHUB_TOKEN')
-                ]) {
+	stage('Docker Login') {
+		steps {
+		withCredebtials([
+			usernamePassword(
+			credentialsId: 'docker-creds',
+			usernameVariable: 'DOCKERHUB_USER',
+			passwordVariable: 'DOCKERHUB_PASS'
+		)
+		]) {
                     sh '''
                         echo "$DOCKERHUB_TOKEN" | docker login -u marom313 --password-stdin
                     '''
