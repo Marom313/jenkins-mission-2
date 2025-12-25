@@ -1,0 +1,28 @@
+- hosts: app_servers
+  become: true
+
+  vars:
+    service: "{{ service }}"
+    image: "{{ image }}"
+    host_port: "{{ host_port }}"
+
+  tasks:
+    - name: Ensure docker is running
+      service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Pull docker image
+      community.docker.docker_image:
+        name: "{{ image }}"
+        source: pull
+
+    - name: Run container
+      community.docker.docker_container:
+        name: "{{ service }}"
+        image: "{{ image }}"
+        state: started
+        restart_policy: always
+        published_ports:
+          - "{{ host_port }}:80"
